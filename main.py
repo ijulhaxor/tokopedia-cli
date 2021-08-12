@@ -1,17 +1,43 @@
 import json, time, os, pickle
 from selenium import webdriver
+## LINUX
+'''
+pip3 install selenium
+sudo apt install chromium-chromedriver (Debian)
+yay -Sy chromium-chromedriver (Arch)
+'''
 from webdriver_manager.chrome import ChromeDriverManager
-
 driver = webdriver.Chrome(ChromeDriverManager().install())
+#--------------------------------------------------------#
+## GOOGLE COLAB
+'''
+!rm /etc/localtime
+!ln -s /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
+!date
+!pip install selenium
+!apt-get update
+!apt install chromium-chromedriver
+!cp /usr/lib/chromium-browser/chromedriver /usr/bin
+'''
+# import sys
+# sys.path.insert(0,'/usr/lib/chromium-browser/chromedriver')
+# userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36"
+# chrome_options = webdriver.ChromeOptions()
+# chrome_options.add_argument('--headless')
+# chrome_options.add_argument('--no-sandbox')
+# chrome_options.add_argument('--disable-dev-shm-usage')
+# chrome_options.add_argument(f"user-agent={userAgent}")
+# driver = webdriver.Chrome('chromedriver',chrome_options=chrome_options)
+#---------------------------------------------------------------------#
 
 class color:
-    normal = "\033[1;37;49m"
+    white  = "\033[1;37;49m"
     red    = "\033[1;31;49m"
     green  = "\033[1;32;49m"
+    yellow = "\033[1;33;49m"
 
 def clear():
     os.system('clear')
-    pass
 
 def banner():
     clear()
@@ -22,7 +48,7 @@ def banner():
  / / / /_/ / ,< / /_/ / /_/ /  __/ /_/ / / /_/ / /___/ /____/ /
 /_/  \____/_/|_|\____/ .___/\___/\__,_/_/\__,_/\____/_____/___/ 1.2
                     /_/
-{color.normal}
+{color.white}
 [1] Login Akun               [0] Exit
 [2] Beli Pulsa
 [3] Kode Promo Checker
@@ -37,16 +63,20 @@ def paymentMethod(id):
     time.sleep(1.5)
     driver.find_element_by_xpath('//div[contains(@class,"css-v98haz")]').click()
     time.sleep(1)
-    totalHarga   = driver.find_elements_by_xpath('//div[contains(@class,"css-1fl8ljt")]')
-    totalTagihan = driver.find_element_by_xpath('//div[contains(@class,"css-1lh5lee")]').text
-    print(' ')
-    print('='*55)
-    for th in totalHarga:
-        print(th.text.replace("\n"," : "))
-        pass
 
-    print(f'Total Tagihan : {totalTagihan}')
-    print('='*55)
+    payMethod = driver.find_element_by_xpath('//div[contains(@class,"css-vm8epw")]').text
+    total     = driver.find_element_by_xpath('//div[contains(@class,"css-w7c8m7")]').text
+    fee       = driver.find_element_by_xpath('//div[contains(@id,"payment-fee")]').text.replace('\n',' : ')
+    item      = driver.find_element_by_xpath('//div[contains(@class,"bold ellipsis")]').text
+    amount    = driver.find_element_by_xpath('//div[contains(@class,"css-k49rwp")]').text
+    print(f'''
+{'='*55}
+Barang        : {item} - {amount}
+Metode Bayar  : {payMethod}
+{fee}
+Total Bayar   : {total}
+{'='*55}''')
+
     driver.find_element_by_xpath('//div[contains(@class,"css-1f2kkgg")]').click()
     input('\nTekan [Enter] untuk melanjutkan... ')
     driver.find_element_by_xpath('//button[contains(@id,"btn-pay-confirm")]').click()
@@ -59,14 +89,14 @@ def paymentMethod(id):
     time.sleep(5)
     payDeadline  = driver.find_element_by_xpath('//p[contains(@class,"css-6q98d4-unf-heading-unf-heading")]').text
     payMethod    = driver.find_element_by_xpath('//div[contains(@class,"css-1jr489l")]').text
-    NoVirtualAcc = driver.find_element_by_xpath('//div[contains(@id,"copy-code")]').text
+    payCode      = driver.find_element_by_xpath('//div[contains(@id,"copy-code")]').text
     totalPayment = driver.find_element_by_xpath('//div[contains(@class,"css-158s7cq")]').text
     print(f'''
 {'='*55}
-Batas Akhir Pembayaran : {payDeadline}
-Metode Pembayaran      : {payMethod}
-Nomor Virtual Account  : {NoVirtualAcc}
-Total Pembayaran       : {totalPayment}
+Batas Akhir Pembayaran  : {payDeadline}
+Metode Pembayaran       : {payMethod}
+Kode Pembayaran / No VA : {payCode}
+Total Pembayaran        : {totalPayment}
 {'='*55}''')
     input('\nTekan [Enter] untuk melanjutkan... ')
     pass
@@ -80,17 +110,17 @@ def login(phone):
     try:
         driver.find_element_by_xpath('//img[contains(@src,"https://ecs7.tokopedia.net/otp/cotp/ICON_SMS_NEW.png")]').click()
     except Exception as e:
-        print(f'{color.red}Login gagal!{color.normal}')
+        print(f'{color.red}Login gagal!{color.white}')
 
     time.sleep(1)
     text = driver.find_element_by_xpath('//div[contains(@class,"css-t8bpct")]').text
     clear()
-    print(f'{color.green}{text}{color.normal}')
+    print(f'{color.green}{text}{color.white}')
 
     try:
         driver.find_element_by_tag_name('input').send_keys(input('Kode OTP : '))
     except Exception as e:
-        print(f'{color.red}Login gagal!{color.normal}')
+        print(f'{color.red}Login gagal!{color.white}')
         exit()
 
     time.sleep(2)
@@ -107,8 +137,13 @@ def login(phone):
     time.sleep(3)
 
     name = driver.find_element_by_xpath('//span[contains(@class,"css-5hicrt")]').text
-    print(f'{color.green}\nLogin Berhasil!{color.normal}\nNama     : {name}\nNo Telp  : {phone}\n')
-    input('Press [Enter] key to continue... ')
+    print(f'''{color.green}
+Login Berhasil!{color.white}
+{'='*35}
+Nama     : {name}
+No Telp  : {phone}
+{'='*35}''')
+    input('\nTekan [Enter] untuk melanjutkan... ')
     driver.get("https://www.tokopedia.com/")
 
 def beliPulsa():
@@ -167,13 +202,22 @@ def beliPulsa():
     time.sleep(2)
     try:
         ket = driver.find_element_by_xpath('//div[contains(@class, "css-1b6t3r5")]').text
-        print(f"{color.red}{ket}{color.normal}")
+        print(f"{color.red}{ket}{color.white}")
         driver.close()
         exit()
     except Exception as e:
         pass
 
-    time.sleep(1.5)
+    time.sleep(2)
+
+    try:
+        title = driver.find_element_by_xpath('//div[contains(@class,"css-13x6xoy")]').text
+        mess  = driver.find_element_by_xpath('//div[contains(@class,"css-dj7unj")]').text
+        print(f'\n{color.yellow}{title}\n{mess}{color.white}')
+        time.sleep(1)
+        driver.find_element_by_xpath('//span[contains(text(),"Ya, saya mengerti")]').click()
+    except Exception as e:
+        pass
 
     select = input('\nGunakan kode promo? [y/n] ')
 
@@ -195,31 +239,28 @@ def beliPulsa():
         time.sleep(1.5)
         try:
             ket = driver.find_element_by_xpath('//p[contains(@class,"css-t9c9fq")]').text
-            print(f'''\n{color.red}[{kode}] {ket}{color.normal}
+            print(f'''\n{color.red}[{kode}] {ket}{color.white}
             ''')
         except Exception as e:
-            print(f'''\n{color.green}[{kode}] Kode promo dapat digunakan!{color.normal}
+            print(f'''\n{color.green}[{kode}] Kode promo berhasil digunakan!{color.white}
             ''')
         pass
 
-    driver.find_element_by_xpath('//span[contains(text(),"Pilih Promo")]').click()
+    try:
+        driver.find_element_by_xpath('//span[contains(text(),"Belanja Tanpa Promo")]').click()
+    except Exception as e:
+        driver.find_element_by_xpath('//span[contains(text(),"Pilih Promo")]').click()
 
     if select == "n":
         pass
 
-    try:
-        print(driver.find_element_by_xpath('//div[contains(@class,"css-dj7unj")]').text)
-        time.sleep(1)
-        driver.find_element_by_xpath('//span[contains(text(),"Ya, saya mengerti")]').click()
-    except Exception as e:
-        pass
-
     details = driver.find_elements_by_xpath('//div[contains(@class,"value")]')
-    print('\nCheckout\n')
+    print('='*55)
     for detail in details:
         print(detail.find_element_by_tag_name("p").text)
 
-    input('\nPress [Enter] key to continue... ')
+    print('='*55)
+    input('\nTekan [Enter] untuk melanjutkan... ')
     driver.find_element_by_tag_name("button").click()
     time.sleep(6)
     print('''
@@ -301,7 +342,6 @@ def voucherPulsaChecker():
     result = f.read().split('\n')
     result = json.dumps(result[n])
     index = result.replace('"', '')
-
     driver.find_element_by_xpath(f'//div[contains(text(),"{index}")]').click()
 
     os.remove('nominal.txt')
@@ -326,14 +366,13 @@ def voucherPulsaChecker():
 
         try:
             ket = driver.find_element_by_xpath('//p[contains(@class,"css-t9c9fq")]').text
-            print(f'''{color.red}[{voucher}] {ket}{color.normal}
+            print(f'''{color.red}[{voucher}] {ket}{color.white}
             ''')
         except Exception as e:
-            print(f'''{color.green}[{voucher}] Kode promo dapat digunakan!{color.normal}
+            print(f'''{color.green}[{voucher}] Kode promo dapat digunakan!{color.white}
             ''')
 
-    input('Press [Enter] key to continue... ')
-
+    input('\nTekan [Enter] untuk melanjutkan... ')
 
 while True:
     banner()
